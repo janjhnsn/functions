@@ -1,5 +1,5 @@
 const   webpack = require('webpack')
-,       PROD = false; //JSON.parse(process.env.PROD_ENV || '0')
+,       PROD = true; //JSON.parse(process.env.PROD_ENV || '0')
 ;
 
 module.exports = {

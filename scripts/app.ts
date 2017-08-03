@@ -7,3 +7,8 @@ f.template("template");
 f.toggleClass(elements, '');
 
 f.setStyle(elements[0], "", "");
+
+var div = f.createElement("div");
+div.textContent = "HELLO WORLD";
+
+f.prependElement(div as Element, window.document.body);
