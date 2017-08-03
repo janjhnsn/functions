@@ -1,5 +1,5 @@
 
-export default (element: string, isText: Boolean): Element | Text => {
+export default (element: string, isText = false): Element | Text => {
     if (isText) {
         return document.createTextNode(<string>element);
     }
