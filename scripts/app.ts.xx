@@ -1,0 +1,394 @@
+/*
+
+'use strict';
+
+// Require dependencies for this module
+
+var isCollection = el => {
+    if (el === undefined) return false;
+
+    const protoName = el.toString();
+
+    return  protoName.indexOf("HTMLCollection") != -1 || 
+            protoName.indexOf("NodeList") != -1 ||
+            Array.isArray(el);
+},
+    callEach = (el, callback) => {
+        if (isCollection(el)) {
+            functions.forEach(el, callback);
+        } else {
+            callback(el);
+        }
+},
+    parse = (str, type) => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(str, type);
+        return doc;
+},
+    XHRPromise = (url, requestMethod, data, contentType) => {
+        // Create new promise with the Promise() constructor;
+        // This has as its argument a function
+        // with two parameters, resolve and reject
+        return new Promise((resolve, reject) => {
+            // Standard XHR to load a resource
+            const request = new XMLHttpRequest();
+            url = encodeURI(url);
+            request.open(requestMethod, url);
+            
+            if (contentType !== undefined) {
+                request.setRequestHeader("Content-Type", contentType);
+            }
+
+            const error = { isResponseData: false };
+
+            // When the request loads, check whether it was successful
+            request.onload = () => {
+                var status = request.status;
+                if (status === 200) {
+                    // If successful, resolve the promise by passing back the request response
+                    resolve(request.response);
+                } else if (status === 500) {
+                    error.message = 'There was an server error';
+                } else {
+                    error.message = request.statusText;
+                    error.isResponseData = true;
+                }
+                    reject(error);
+            };
+            request.onerror = () => {
+                // Also deal with the case when the entire request fails to begin with
+                // This is probably a network error, so reject the promise with an appropriate message
+                
+                error.message = 'There was a network error.';
+
+                reject(error);
+            };
+            
+            if (data === undefined) {
+                data = {};
+            }
+
+            // Send the request
+            request.send(data);
+        });
+    }
+;
+
+var functions = {
+    addClass: (el, classNames) => {
+        callEach(el, e => {
+            functions.forEach(classNames.split(' '), className => {
+                e.classList.add(className);  
+            });
+        });
+    },
+    addEventListener: (el, eventNames, callback, parent) => {
+        if (parent) {
+            callEach(parent, e => {
+                eventNames.split(' ').forEach(eventName => {
+                    e.addEventListener(eventName, callback);
+                });
+            });
+        } else {
+            callEach(el, e => {
+                eventNames.split(' ').forEach(eventName => {
+                    e.addEventListener(eventName, callback);
+                });
+            });
+        }
+    },
+    append: (el, parent) => {
+        if (isCollection(parent)) {
+            parent = parent[0];
+        }
+
+        callEach(el, e => {
+            parent.appendChild(e);
+        });
+    },
+    clone: el => {
+        if (isCollection(el)) {
+            el = el[0];
+        }
+        
+        return el.cloneNode(true);
+    },
+    create: (el, isText) => {
+        if (isText) {
+            return document.createTextNode(el);
+        }
+
+        return document.createElement(el);
+    },
+    css: (el, property, value) => {
+        if (isCollection(el)) {
+            el = el[0];
+        }
+
+        if (value) {
+            el.style[property] = value;
+        }
+
+        return window.getComputedStyle(el).getPropertyValue(property);
+    },
+    debounce: (func, wait, immediate) => {
+        // Debounce function from https://davidwalsh.name/javascript-debounce-function
+        var timeout;
+        return function (e) {
+            var context = this, args = arguments;
+            var later = () => {
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) func.apply(context, args);
+        }
+    },
+    empty: el => {
+        callEach(el, e => {
+            e.innerHTML = '';
+        });
+    },
+    forEach: (elements, callback) => {
+        Array.prototype.forEach.call(elements, callback);
+    },
+    get: (url) => {
+        return XHRPromise(url, 'GET');
+    },
+    getAttribute: (el, attributeName) => {
+        if (isCollection(el)) {
+            return el[0].getAttribute(attributeName);
+        }
+        
+        return el.getAttribute(attributeName);
+    },
+    getNextElement: el => {
+        if (isCollection(el)) {
+            el = el[0];
+        }
+
+        return el.nextElementSibling;
+    },
+    getParent: (el, className) => {
+        if (isCollection(el)) {
+            el = el[0];
+        };
+
+        if (className === undefined || functions.hasClass(el.parentNode, className)) {
+            return el.parentNode;
+        }
+
+        return functions.getParent(el.parentNode, className);
+    },
+    getPreviousElement: el => {
+        if (isCollection(el)) {
+            el = el[0];
+        }
+
+        return el.previousElementSibling;
+    },
+    getQueryString: name => {
+        const url = window.location.href;
+
+        name = name.replace(/[\[\]]/g, "\\$&");
+
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)", "g"),
+            results = [];
+
+        let m;
+
+        while ((m = regex.exec(url)) !== null) {
+            // This is necessary to avoid infinite loops with zero-width matches
+            if (m.index === regex.lastIndex) {
+                regex.lastIndex++;
+            }
+
+            results.push(decodeURIComponent(m[2].replace(/\+/g, " ")));
+        }
+
+        if (results.length === 0) {
+            return undefined;
+        }
+
+        if (results.length === 1) {
+            return results[0];
+        }
+
+        return results;
+    },
+    hasClass: (el, className) => {
+        if (isCollection(el)) {
+            el = el[0];
+        }
+
+        return el.classList.contains(className);
+    },
+    offset: el => {
+        const rect = el.getBoundingClientRect();
+
+        return {
+            top: rect.top + window.pageYOffset,
+            left: rect.left + window.pageXOffset
+        }
+    },
+    parseHTML: str => {
+        return parse(str, "text/html").body.children;
+    },
+    parseXML: str => {
+        return parse(str, "text/xml").documentElement;
+    },
+    post: (url, data, contentType) => {
+        return XHRPromise(url, 'POST', data, contentType);
+    },
+    prepend: (el, parent) => {
+        if (isCollection(parent)) {
+            parent = parent[0];
+        }
+
+        callEach(el, e => {
+            parent.insertBefore(e, parent.firstChild);
+        });
+    },
+    remove: el => {
+        if (isCollection(el)) {
+            el = el[0];
+        } 
+
+        el.parentNode.removeChild(el);
+    },
+    removeAttribute: (el, attributeName) => {
+        callEach(el, e => {
+            return e.removeAttribute(attributeName);
+        });
+    },
+    removeClass: (el, className) => {
+        callEach(el, e => {
+            e.classList.remove(className);
+        });
+    },
+    removeQueryString: (url, parameter, value) => {
+        var urlParts = url.split('?');
+
+        if (urlParts.length >= 2) {
+            // Get first part, and remove from array
+            var urlBase = urlParts.shift();
+
+            // Join it back up
+            var queryString = urlParts.join('?');
+
+            var prefix = encodeURIComponent(parameter) + '=';
+            var parts = queryString.split(/[&;]/g);
+
+            if  (value !== undefined) {
+                prefix += encodeURIComponent(value);
+            }
+
+            // Reverse iteration as may be destructive
+            for (var i = parts.length; i-- > 0; ) {
+                
+                // if data sent compare data
+                if (prefix.split('=')[1].length > 0) {
+                    if (parts[i] === prefix) {
+                        parts.splice(i, 1);
+                    }
+                // else use starts with idiom
+                } else {
+                    // Idiom for string.startsWith
+                    if (parts[i].lastIndexOf(prefix, 0) !== -1) {
+                        parts.splice(i, 1);
+                    }
+                }
+            }
+
+            url = urlBase + '?' + parts.join('&');
+        }
+
+        return url;
+    },
+    scrollTo: (el, to, direction, duration) => {
+        if (direction === undefined) {
+            direction = "scrollTop";
+        }
+
+        if (duration === undefined) {
+            duration = 500;
+        }
+
+        if(duration <= 0) {
+            return;
+        }
+
+        let difference = to - el[direction],
+            perTick = difference / duration * 10;
+
+        setTimeout(function() {
+            el[direction] = el[direction] + perTick;
+
+            if (el[direction] === to) {
+                return;
+            } 
+
+            functions.scrollTo(el, to, direction, duration - 10);
+        }, 10);
+    },
+    select: (selector, parent) => {
+        if (isCollection(parent)) {
+            parent = parent[0];
+        }
+
+        if (!parent) {
+            parent = document;
+        }
+
+        if (selector.indexOf(' ') === -1 && selector.indexOf(':') === -1) {
+            if (selector.lastIndexOf('.') === 0) {
+                return parent.getElementsByClassName(selector.substring(1));
+            } 
+            
+            if (selector.lastIndexOf('#') === 0) {
+                return parent.getElementById(selector.substring(1));
+            }
+        }
+
+        return parent.querySelectorAll(selector);
+    },
+    setAttribute: (el, attributeName, value) => {
+        callEach(el, e => {
+            return e.setAttribute(attributeName, value);
+        });
+    },
+    template: (template) => {
+        var F =
+            "var p=[];" +
+            "p.push('" +
+            template.replace(/[\r\t\n]/g, " ")
+            .replace(/'(?=[^!--]*-->)/g, "\t")
+            .split("'").join("\\'")
+            .split("\t").join("'")
+            .replace(/<!--#(.+?)-->/g, "',$1,'")
+            .replace(/&lt;!--#(.+?)--&gt;/g, "',$1,'")
+            .split("<!--").join("');")
+            .split("-->").join("p.push('") + "');return p.join('');";
+        return new Function('data', F);
+    },
+    toggleClass: (el, className) => {
+        callEach(el, e => {
+            e.classList.toggle(className);
+        });
+    },
+    upsertQueryString: (uri, name, value) => {
+        var re = new RegExp("([?&])" + name + "=.*?(&|$)", "i");
+        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+        if (uri.match(re)) {
+            return uri.replace(re, '$1' + name + "=" + value + '$2');
+        } else {
+            return uri + separator + name + "=" + value;
+        }
+    }
+}
+
+module.exports = functions;
+
+*/
