@@ -11,6 +11,7 @@
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-typescript": "^3.2.0",
+    "through2": "^2.0.3",
     "ts-loader": "^2.2.2",
     "typescript": "^2.4.1",
     "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony",
