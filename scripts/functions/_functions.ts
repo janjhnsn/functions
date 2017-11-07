@@ -7,6 +7,7 @@ import cloneElement from './dom/cloneElement';
 import createElement from './dom/createElement';
 import emptyElement from './dom/emptyElement';
 import getAttr from './dom/getAttribute';
+import getBoundingRect from './dom/getBoundingRect';
 import getElement from './dom/getElement';
 import getNextElement from './dom/getNextElement';
 import getParent from './dom/getParent';
@@ -22,6 +23,7 @@ import scrollAnimate from './dom/scrollAnimate';
 import setAttr from './dom/setAttribute';
 import setStyle from './dom/setStyle';
 import toggleClass from './dom/toggleClass';
+import triggerEvent from './dom/triggerEvent';
 
 /* UTIL FUNCTIONS */
 import debounce from './util/debounce';
@@ -35,36 +37,38 @@ import upsertQueryString from './queryString/upsert';
 
 export default {
     /* DOM FUNCTIONS */
-        addClass
-    ,   addEvent
-    ,   appendElement
-    ,   cloneElement
-    ,   createElement
-    ,   emptyElement
-    ,   getAttr
-    ,   getElement
-    ,   getNextElement
-    ,   getParent
-    ,   getOffset
-    ,   getPreviousElement
-    ,   getStyle
-    ,   hasClass
-    ,   prependElement
-    ,   removeElement
-    ,   removeAttr
-    ,   removeClass
-    ,   scrollAnimate
-    ,   setAttr
-    ,   setStyle
-    ,   toggleClass
-    
+    addClass
+    , addEvent
+    , appendElement
+    , cloneElement
+    , createElement
+    , emptyElement
+    , getAttr
+    , getBoundingRect
+    , getElement
+    , getNextElement
+    , getParent
+    , getOffset
+    , getPreviousElement
+    , getStyle
+    , hasClass
+    , prependElement
+    , removeElement
+    , removeAttr
+    , removeClass
+    , scrollAnimate
+    , setAttr
+    , setStyle
+    , toggleClass
+    , triggerEvent
+
     /* UTIL FUNCTIONS */
-    ,   debounce
-    ,   each
-    ,   template
+    , debounce
+    , each
+    , template
 
     /* QUERYSTRING FUNCTIONS */
-    ,   getQueryString
-    ,   removeQueryString
-    ,   upsertQueryString
+    , getQueryString
+    , removeQueryString
+    , upsertQueryString
 };
